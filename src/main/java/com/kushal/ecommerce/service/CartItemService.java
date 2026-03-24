@@ -20,7 +20,7 @@ public class CartItemService {
     private final ProductService productService;
 
     public void addItemToCart(Long cartId, Long productId, int quantity){
-        Cart cart = cartService.getCart(cartId);
+        Cart cart = cartService.getCartEntityById(cartId);
         Product product = productService.getProductEntityById(productId);
 
         Optional<CartItem> existingItem = cart.getItems()
@@ -40,7 +40,7 @@ public class CartItemService {
     }
 
     public void removeItemFromCart(Long cartId, Long productId){
-        Cart cart = cartService.getCart(cartId);
+        Cart cart = cartService.getCartEntityById(cartId);
         CartItem itemToRemove = cart.getItems()
                 .stream()
                 .filter(item->item.getProduct().getId().equals(productId))
@@ -52,7 +52,7 @@ public class CartItemService {
     }
 
     public void updateItemQuantity(Long cartId, Long productId, int quantity){
-        Cart cart = cartService.getCart(cartId);
+        Cart cart = cartService.getCartEntityById(cartId);
         CartItem itemToUpdate = cart.getItems()
                 .stream()
                 .filter(item->item.getProduct().getId().equals(productId))

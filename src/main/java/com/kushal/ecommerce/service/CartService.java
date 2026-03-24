@@ -1,6 +1,8 @@
 package com.kushal.ecommerce.service;
 
+import com.kushal.ecommerce.dto.CartResponseDTO;
 import com.kushal.ecommerce.exception.ResourceNotFoundException;
+import com.kushal.ecommerce.mapper.CartMapper;
 import com.kushal.ecommerce.model.Cart;
 import com.kushal.ecommerce.repo.CartRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,30 +13,36 @@ import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CartService {
     private final CartRepository cartRepository;
+    private final CartMapper cartMapper;
 
-    @Transactional(readOnly = true)
-    public Cart getCart(Long id){
-        Cart cart = cartRepository.findById(id)
+    public Cart getCartEntityById(Long id){
+         return cartRepository.findById(id)
                 .orElseThrow(()-> new ResourceNotFoundException("Cart not found with id: " + id));
-        BigDecimal totalAmount = cart.getTotalAmount();
-        cart.setTotalAmount(totalAmount);
+    }
 
-        return cartRepository.save(cart);
+    public CartResponseDTO getCartById(Long id){
+        return cartRepository.findById(id)
+                .map(cartMapper::mapToCartResponseDTO)
+                .orElseThrow(()-> new ResourceNotFoundException("Cart not found with id: " + id));
     }
 
     @Transactional
     public void clearCart(Long id){
-        Cart cart = getCart(id);
-        cart.getItems().clear();
-        cart.setTotalAmount(BigDecimal.ZERO);
-        cartRepository.save(cart);
+        Cart cart = getCartEntityById(id);
+        cart.clearCart();
+        cartRepository.save(cart);  // Optional, since Transaction is used.
+        // Necessary only when a new Entity is created
     }
 
-    @Transactional(readOnly = true)
     public BigDecimal getTotalPrice(Long id){
-        Cart cart = getCart(id);
-        return cart.getTotalAmount();
+        return getCartEntityById(id).getTotalAmount();
+    }
+
+    @Transactional
+    public Long initializeNewCart(){
+        return cartRepository.save(new Cart()).getId();
     }
 }
